@@ -1,0 +1,8 @@
+en:
+  pipeline_task_mailer:
+    task_assigned:
+      subject: "[%{account_name}] New task assigned: %{task_title}"
+    task_due_soon:
+      subject: "[%{account_name}] Task due in 1 hour: %{task_title}"
+    task_overdue:
+      subject: "[%{account_name}] OVERDUE Task: %{task_title}"

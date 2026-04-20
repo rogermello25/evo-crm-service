@@ -1,0 +1,271 @@
+require 'net/http'
+require 'net/http/persistent'
+require 'json'
+require 'uri'
+require 'digest'
+
+class EvoAuthService
+  class AuthenticationError < StandardError; end
+  class ValidationError < StandardError
+    attr_reader :code, :status
+
+    def initialize(message = 'Invalid token', code: ApiErrorCodes::UNAUTHORIZED, status: nil)
+      super(message)
+      @code = code.presence || ApiErrorCodes::UNAUTHORIZED
+      @status = status
+    end
+  end
+  class NetworkError < StandardError; end
+  class ParseError < StandardError; end
+
+  OPEN_TIMEOUT = 5
+  READ_TIMEOUT = 10
+  IDLE_TIMEOUT = 30
+
+  @persistent_clients = {}
+  @clients_mutex = Mutex.new
+
+  class << self
+    attr_reader :persistent_clients, :clients_mutex
+  end
+
+  attr_reader :base_url
+
+  def initialize(base_url = nil)
+    @base_url = base_url || ENV.fetch('EVO_AUTH_SERVICE_URL', 'http://localhost:3001')
+  end
+
+  # Validate existing token - Primary method for Evolution authentication
+  def validate_token(token:, token_type:)
+    headers = build_headers(token, token_type)
+
+    response = instrument_remote_call('validate_token', token_type: token_type) do
+      post_request('/api/v1/auth/validate', {}, headers)
+    end
+
+    data = response&.dig('data')
+    return data if data.present?
+
+    if response&.dig('success') == false && response&.dig('error').present?
+      raise_validation_error(response)
+    end
+
+    raise AuthenticationError, 'Authentication service unavailable'
+  rescue ValidationError
+    raise
+  rescue AuthenticationError
+    raise
+  rescue NetworkError => e
+    Rails.logger.error "EvoAuth: Network error during validation: #{e.message}"
+    raise AuthenticationError, 'Authentication service unavailable'
+  rescue StandardError => e
+    Rails.logger.error "EvoAuth: Token validation error: #{e.class} - #{e.message}"
+    raise AuthenticationError, 'Token validation failed'
+  end
+
+  def build_headers(token, token_type)
+    case token_type.to_sym
+    when :bearer
+      { 'Authorization' => "Bearer #{token}" }
+    when :api_access_token
+      { 'api_access_token' => token }
+    else
+      raise ArgumentError, "Invalid token type: #{token_type}"
+    end
+  end
+
+  # Get user data by ID
+  def get_user(user_id)
+    response = get_request("/api/v1/users/#{user_id}")
+    response&.dig('data')
+  rescue StandardError => e
+    Rails.logger.error "EvoAuth: Get user error: #{e.message}"
+    nil
+  end
+
+  # Check account-scoped permission for user
+  def check_account_permission(user_id, _identifier = nil, permission_key)
+    # Use new standard: /api/v1/users/:id/check_permission with account-id header
+    headers = {}
+    response = instrument_remote_call(
+      'check_account_permission',
+      user_id: user_id
+    ) do
+      post_request("/api/v1/users/#{user_id}/check_permission",
+                   { permission_key: permission_key },
+                   headers)
+    end
+
+    data = response['data'] || {}
+    if data&.dig('has_permission')
+      true
+    else
+      Rails.logger.error "Failed to check account permission: #{response&.dig('error') || 'Unknown error'}"
+      false
+    end
+  rescue StandardError => e
+    Rails.logger.error "Error checking account permission: #{e.message}"
+    false
+  end
+
+  # Check global user permission
+  def check_user_permission(user_id, permission_key)
+    response = instrument_remote_call('check_user_permission', user_id: user_id) do
+      post_request("/api/v1/users/#{user_id}/check_permission",
+                   { permission_key: permission_key })
+    end
+
+    data = response['data'] || {}
+    if data&.dig('has_permission')
+      true
+    else
+      Rails.logger.error "Failed to check user permission: #{response&.dig('error') || 'Unknown error'}"
+      false
+    end
+  rescue StandardError => e
+    Rails.logger.error "Error checking user permission: #{e.message}"
+    false
+  end
+
+  # Get user role
+  def get_role(user_id, _identifier = nil)
+    # Use new standard: /api/v1/users/:id/role
+    headers = {}
+    response = instrument_remote_call('get_role', user_id: user_id) do
+      get_request("/api/v1/users/#{user_id}/role", headers)
+    end
+    data = response['data'] || {}
+    data&.dig('role')
+  rescue StandardError => e
+    Rails.logger.error "EvoAuth: Get role error: #{e.message}"
+    nil
+  end
+
+  private
+
+  def get_request(endpoint, headers = {})
+    uri = URI.join(@base_url, endpoint)
+    request = Net::HTTP::Get.new(uri)
+    request['Content-Type'] = 'application/json'
+    apply_headers(request, headers)
+    perform_request(uri, request)
+  end
+
+  def post_request(endpoint, payload, headers = {})
+    uri = URI.join(@base_url, endpoint)
+    request = Net::HTTP::Post.new(uri)
+    request['Content-Type'] = 'application/json'
+    apply_headers(request, headers)
+    request.body = payload.to_json
+    perform_request(uri, request)
+  end
+
+  def apply_headers(request, headers)
+    headers.each do |key, value|
+      request[key] = value
+    end
+
+    unless headers.key?('Authorization') || headers.key?('api_access_token')
+      request['Authorization'] = "Bearer #{Current.bearer_token}" if Current.bearer_token.present?
+      request['api_access_token'] = Current.api_access_token.to_s if Current.api_access_token.present?
+    end
+  end
+
+  def perform_request(uri, request)
+    response = persistent_http_client.request(uri, request)
+    parsed = parse_response_body!(response.body)
+    return parsed if response.is_a?(Net::HTTPSuccess)
+
+    status = response.code.to_i
+    if validation_status?(status)
+      raise_validation_error(parsed, status: status)
+    end
+
+    Rails.logger.error "EvoAuth: HTTP error #{response.code}: #{response.message}"
+    raise NetworkError, "HTTP #{response.code}: #{response.message}"
+  rescue ValidationError => e
+    raise e
+  rescue ParseError => e
+    Rails.logger.error "EvoAuth: Response parse error: #{e.message}"
+    raise NetworkError, "Invalid response format"
+  rescue Timeout::Error, Net::ReadTimeout, Net::OpenTimeout => e
+    Rails.logger.error "EvoAuth: Request timeout: #{e.class} - #{e.message}"
+    raise NetworkError, "Request timeout: #{e.message}"
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ETIMEDOUT => e
+    Rails.logger.error "EvoAuth: Connection error: #{e.class} - #{e.message}"
+    raise NetworkError, "Connection failed: #{e.message}"
+  rescue SocketError => e
+    Rails.logger.error "EvoAuth: Socket error: #{e.class} - #{e.message}"
+    raise NetworkError, "Socket error: #{e.message}"
+  rescue OpenSSL::SSL::SSLError => e
+    Rails.logger.error "EvoAuth: SSL error: #{e.class} - #{e.message}"
+    raise NetworkError, "SSL error: #{e.message}"
+  rescue NetworkError => e
+    raise e
+  rescue StandardError => e
+    Rails.logger.error "EvoAuth: Unexpected error: #{e.class} - #{e.message}"
+    raise NetworkError, "Unexpected error: #{e.message}"
+  end
+
+  def persistent_http_client
+    self.class.clients_mutex.synchronize do
+      self.class.persistent_clients[@base_url] ||= begin
+        client = Net::HTTP::Persistent.new(name: "evo-auth-#{Digest::SHA1.hexdigest(@base_url)}")
+        client.open_timeout = OPEN_TIMEOUT
+        client.read_timeout = READ_TIMEOUT
+        client.idle_timeout = IDLE_TIMEOUT
+        if Rails.env.development? || @base_url.include?('ngrok')
+          client.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        end
+        client
+      end
+    end
+  end
+
+  def instrument_remote_call(operation, metadata = {})
+    started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    result = yield
+    elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000).round(1)
+    Rails.logger.info("EvoAuthPerformance operation=#{operation} status=ok duration_ms=#{elapsed_ms} #{metadata.map { |k, v| "#{k}=#{v}" }.join(' ')}".strip)
+    result
+  rescue StandardError => e
+    elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000).round(1)
+    Rails.logger.warn("EvoAuthPerformance operation=#{operation} status=error duration_ms=#{elapsed_ms} error=#{e.class} #{metadata.map { |k, v| "#{k}=#{v}" }.join(' ')}".strip)
+    raise e
+  end
+
+  def parse_response_body!(body)
+    return {} if body.blank?
+
+    JSON.parse(body)
+  rescue JSON::ParserError => e
+    raise ParseError, e.message
+  end
+
+  def validation_status?(status)
+    [401, 403, 422].include?(status)
+  end
+
+  def raise_validation_error(response, status: nil)
+    error_payload = response&.dig('error')
+    if error_payload.is_a?(Hash)
+      error_code = error_payload['code'].presence || default_validation_code_for_status(status)
+      error_message = error_payload['message'] || 'Invalid token'
+      raise ValidationError.new(error_message, code: error_code, status: status)
+    end
+
+    error_message = response&.dig('message') || response&.dig('error') || 'Invalid token'
+    raise ValidationError.new(error_message, code: default_validation_code_for_status(status), status: status)
+  end
+
+  def default_validation_code_for_status(status)
+    case status.to_i
+    when 403
+      ApiErrorCodes::FORBIDDEN
+    when 422
+      ApiErrorCodes::VALIDATION_ERROR
+    else
+      ApiErrorCodes::UNAUTHORIZED
+    end
+  end
+end

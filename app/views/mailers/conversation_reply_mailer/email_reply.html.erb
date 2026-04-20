@@ -1,0 +1,31 @@
+<% if @message.content %>
+  <%
+    # Check if content is already HTML (from email templates or legacy HTML)
+    content = @message.content.strip
+    is_html = content.start_with?('<!DOCTYPE') ||
+              content.start_with?('<html') ||
+              content.start_with?('<!doctype') ||
+              (content.start_with?('<') && content.include?('</'))
+
+    if is_html
+      # Content is already HTML - render directly without markdown processing
+      # This happens when using email templates from react-email-editor
+  %>
+    <%= content.html_safe %>
+  <% else
+      # Content is markdown or plain text - process with markdown renderer
+  %>
+    <%= EvolutionMarkdownRenderer.new(@message.content).render_message %>
+  <% end %>
+<% end %>
+<% if @channel&.email_signature.present? %>
+  <div style="margin-top: 20px; border-top: 1px solid #e0e0e0; padding-top: 12px;">
+    <%= @channel.email_signature.html_safe %>
+  </div>
+<% end %>
+<% if @large_attachments.present? %>
+  <p>Attachments:</p>
+  <% @large_attachments.each do |attachment| %>
+    <p><a href="<%= attachment.file_url %>" target="_blank"><%= attachment.file.filename.to_s %></a></p>
+  <% end %>
+<% end %>

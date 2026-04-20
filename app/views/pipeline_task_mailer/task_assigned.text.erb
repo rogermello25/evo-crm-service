@@ -1,0 +1,25 @@
+Hi <%= @assignee.name %>,
+
+You have been assigned a new task:
+
+<%= @task.title %>
+<% if @task.description.present? %>
+Description: <%= @task.description %>
+<% end %>
+
+Task Type: <%= @task.task_type.titleize %>
+Priority: <%= @task.priority.titleize %>
+<% if @task.due_date.present? %>
+Due Date: <%= @task.due_date.strftime('%B %d, %Y at %I:%M %p') %>
+<% end %>
+
+<% if @conversation.present? %>
+Related to conversation: <%= @conversation.display_id %>
+<% elsif @contact.present? %>
+Related to contact: <%= @contact.name %>
+<% end %>
+
+Please complete this task at your earliest convenience.
+
+Best regards,
+<%= @account_name %> Team

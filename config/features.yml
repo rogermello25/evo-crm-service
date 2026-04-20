@@ -1,0 +1,153 @@
+# DO NOT change the order of features EVER
+############################################
+# name: the name to be used internally in the code
+# display_name: the name to be used in the UI
+# enabled: whether the feature is enabled by default
+# help_url: the url to the help center article
+# evolution_internal: whether the feature is internal to Evolution and should not be shown in the UI for other self hosted installations
+# deprecated: purpose of feature flag is done, no need to show it in the UI anymore
+- name: inbound_emails
+  display_name: Inbound Emails
+  enabled: true
+- name: channel_email
+  display_name: Email Channel
+  enabled: true
+  help_url: https://chwt.app/hc/email
+- name: channel_facebook
+  display_name: Facebook Channel
+  enabled: true
+  help_url: https://chwt.app/hc/fb
+- name: channel_twitter
+  display_name: Twitter Channel
+  enabled: true
+  deprecated: true
+- name: ip_lookup
+  display_name: IP Lookup
+  enabled: true
+- name: email_continuity_on_api_channel
+  display_name: Email Continuity on API Channel
+  enabled: true
+- name: agent_bots
+  display_name: Agent Bots
+  enabled: true
+  help_url: https://chwt.app/hc/agent-bots
+- name: macros
+  display_name: Macros
+  enabled: true
+- name: agent_management
+  display_name: Agent Management
+  enabled: true
+- name: team_management
+  display_name: Team Management
+  enabled: true
+  help_url: https://chwt.app/hc/teams
+- name: inbox_management
+  display_name: Inbox Management
+  enabled: true
+- name: labels
+  display_name: Labels
+  enabled: true
+  help_url: https://chwt.app/hc/labels
+- name: custom_attributes
+  display_name: Custom Attributes
+  enabled: true
+  help_url: https://chwt.app/hc/custom-attributes
+- name: automations
+  display_name: Automations
+  enabled: true
+- name: canned_responses
+  display_name: Canned Responses
+  enabled: true
+  help_url: https://chwt.app/hc/canned
+- name: integrations
+  display_name: Integrations
+  enabled: true
+  help_url: https://chwt.app/hc/integrations
+- name: voice_recorder
+  display_name: Voice Recorder
+  enabled: true
+- name: mobile_v2
+  display_name: Mobile App V2
+  enabled: true
+  deprecated: true
+- name: channel_website
+  display_name: Website Channel
+  enabled: true
+- name: campaigns
+  display_name: Campaigns
+  enabled: true
+  help_url: https://chwt.app/hc/campaigns
+- name: reports
+  display_name: Reports
+  enabled: true
+  help_url: https://chwt.app/hc/reports
+- name: crm
+  display_name: CRM
+  enabled: true
+- name: auto_resolve_conversations
+  display_name: Auto Resolve Conversations
+  enabled: true
+- name: custom_reply_email
+  display_name: Custom Reply Email
+  enabled: true
+- name: custom_reply_domain
+  display_name: Custom Reply Domain
+  enabled: true
+- name: message_reply_to
+  display_name: Message Reply To
+  enabled: true
+  help_url: https://chwt.app/hc/reply-to
+  deprecated: true
+- name: inbox_view
+  display_name: Inbox View
+  enabled: true
+  evolution_internal: true
+- name: linear_integration
+  display_name: Linear Integration
+  enabled: true
+- name: hubspot_integration
+  display_name: HubSpot Integration
+  enabled: true
+- name: evolution_v4
+  display_name: Evolution V4
+  enabled: true
+- name: report_v4
+  display_name: Report V4
+  enabled: true
+  deprecated: true
+- name: shopify_integration
+  display_name: Shopify Integration
+  enabled: true
+  evolution_internal: true
+- name: search_with_gin
+  display_name: Search messages with GIN
+  enabled: true
+  evolution_internal: true
+- name: channel_instagram
+  display_name: Instagram Channel
+  enabled: true
+- name: crm_integration
+  display_name: CRM Integration
+  enabled: true
+- name: bms_integration
+  display_name: BMS Integration
+  enabled: true
+- name: pipelines
+  display_name: Pipelines
+  enabled: true
+  help_url: https://chwt.app/hc/pipelines
+- name: segments_beta
+  display_name: Segments Beta Access
+  enabled: false
+- name: campaigns_beta
+  display_name: Campaigns Beta Access
+  enabled: false
+- name: journeys_beta
+  display_name: Journeys Beta Access
+  enabled: false
+- name: click_tracking_beta
+  display_name: Click Tracking Beta Access
+  enabled: false
+- name: custom_domains_beta
+  display_name: Custom Domains Beta Access
+  enabled: false

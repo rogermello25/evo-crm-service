@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolution OAuth Dynamic Registration Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 40px;
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .step.completed {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .step.active {
+            border-color: #FFC107;
+            background: rgba(255, 193, 7, 0.2);
+        }
+
+        .step.error {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        .step.retrying {
+            border-color: #FF9800;
+            background: rgba(255, 152, 0, 0.2);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .step.completed .step-number {
+            background: #4CAF50;
+        }
+
+        .step.active .step-number {
+            background: #FFC107;
+            color: #000;
+        }
+
+        .step.error .step-number {
+            background: #f44336;
+        }
+
+        .step.retrying .step-number {
+            background: #FF9800;
+            color: #fff;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-size: 1.3em;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .step-description {
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+
+        .controls {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .retry-btn {
+            background: linear-gradient(45deg, #FF9800 0%, #FF5722 100%) !important;
+            font-size: 0.9em !important;
+            padding: 8px 16px !important;
+            margin-top: 10px !important;
+            margin-left: 0 !important;
+            display: block !important;
+        }
+
+        .config {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .config h3 {
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .log-entry.success {
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        .log-entry.error {
+            background: rgba(244, 67, 54, 0.3);
+        }
+
+        .log-entry.info {
+            background: rgba(33, 150, 243, 0.3);
+        }
+
+        .data-display {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OAuth Flow Progress</h1>
+        <p class="subtitle">Follow these steps to complete OAuth authentication with the server.</p>
+
+        <div class="config">
+            <h3>⚙️ Configuração</h3>
+            <p style="margin-bottom: 20px; opacity: 0.9; font-size: 0.9em;">
+                <strong>📋 Como usar:</strong><br>
+                <strong>🔧 Aplicação Existente:</strong> Crie uma aplicação em <code>/oauth/applications</code> e cole as credenciais<br>
+                <strong>🚀 RFC 7591:</strong> Registra a aplicação automaticamente via <code>/oauth/register</code> + seleção de account<br>
+                <strong>⚡ OAuth Dinâmico (Legado):</strong> Sistema antigo com auto-criação durante autorização<br>
+                <strong>🔄 Retry Manual:</strong> Se uma etapa falhar, aparecerá um botão "Tentar Novamente" para reexecutá-la<br>
+                Execute o teste e acompanhe cada passo do fluxo OAuth completo com controle manual de retry!
+            </p>
+            <div class="form-group">
+                <label for="evolutionUrl">Evolution URL:</label>
+                <input type="text" id="evolutionUrl" value="http://localhost:3000">
+            </div>
+            <div class="form-group">
+                <label for="accountId">Account ID:</label>
+                <input type="number" id="accountId" value="1">
+            </div>
+            <div class="form-group">
+                <label for="oauthMode">Modo OAuth:</label>
+                <select id="oauthMode" onchange="toggleOAuthMode()">
+                    <option value="existing">Aplicação Existente</option>
+                    <option value="rfc7591">RFC 7591 - Registro Dinâmico</option>
+                    <option value="dynamic">OAuth Dinâmico (Sistema Legado)</option>
+                </select>
+            </div>
+            <div id="existingAppConfig">
+                <div class="form-group">
+                    <label for="clientId">Client ID:</label>
+                    <input type="text" id="clientId" value="" placeholder="Cole o client_id da sua aplicação OAuth">
+                </div>
+                <div class="form-group">
+                    <label for="clientSecret">Client Secret:</label>
+                    <input type="text" id="clientSecret" value="" placeholder="Cole o client_secret da sua aplicação OAuth">
+                </div>
+            </div>
+            <div id="rfc7591AppConfig" style="display: none;">
+                <div class="form-group">
+                    <label for="rfc7591ClientName">Nome da Aplicação:</label>
+                    <input type="text" id="rfc7591ClientName" value="Test RFC 7591 App" placeholder="Nome da aplicação">
+                </div>
+                <div class="form-group">
+                    <label for="rfc7591ClientId">Client ID:</label>
+                    <input type="text" id="rfc7591ClientId" readonly value="" placeholder="Será gerado automaticamente">
+                </div>
+                <div class="form-group">
+                    <label for="rfc7591ClientSecret">Client Secret:</label>
+                    <input type="text" id="rfc7591ClientSecret" readonly value="" placeholder="Será retornado pelo registro">
+                </div>
+            </div>
+            <div id="dynamicAppConfig" style="display: none;">
+                <div class="form-group">
+                    <label for="dynamicClientId">Client ID Dinâmico:</label>
+                    <input type="text" id="dynamicClientId" readonly value="" placeholder="Será gerado automaticamente">
+                </div>
+                <div class="form-group">
+                    <label for="dynamicClientSecret">Client Secret:</label>
+                    <input type="text" id="dynamicClientSecret" readonly value="" placeholder="Será obtido após criação">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="redirectUri">Redirect URI:</label>
+                <input type="text" id="redirectUri" value="http://localhost:3000/oauth/callback">
+            </div>
+
+        </div>
+
+        <div class="step" id="step1">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Metadata Discovery</div>
+                <div class="step-description">Descobrir endpoints OAuth do servidor</div>
+                <div class="data-display" id="metadata-data" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="step" id="step2">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">OAuth Application Setup</div>
+                <div class="step-description">Usar aplicação OAuth existente ou criar uma nova</div>
+                <div class="data-display" id="registration-data" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="step" id="step3">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Preparing Authorization</div>
+                <div class="step-description">Preparar parâmetros para autorização</div>
+                <div class="data-display" id="auth-prep-data" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="step" id="step4">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Request Authorization and acquire authorization code</div>
+                <div class="step-description">Redirecionar usuário para autorização</div>
+                <div class="data-display" id="auth-request-data" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="step" id="step5">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <div class="step-title">Token Request</div>
+                <div class="step-description">Trocar código de autorização por token</div>
+                <div class="data-display" id="token-data" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="step" id="step6">
+            <div class="step-number">6</div>
+            <div class="step-content">
+                <div class="step-title">Authentication Complete</div>
+                <div class="step-description">Fluxo OAuth concluído com sucesso</div>
+                <div class="data-display" id="complete-data" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="step" id="step7">
+            <div class="step-number">7</div>
+            <div class="step-content">
+                <div class="step-title">API Test - List Inboxes</div>
+                <div class="step-description">Testar token listando inboxes via API OAuth</div>
+                <div class="data-display" id="api-test-data" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startOAuthFlow()">🚀 Iniciar Teste OAuth</button>
+            <button class="btn" id="resetBtn" onclick="resetFlow()">🔄 Resetar</button>
+            <button class="btn" id="continueBtn" onclick="handleAuthCallback()" style="display: none;">✅ Continuar (após autorização)</button>
+        </div>
+
+        <div class="log" id="log">
+            <div class="log-entry info">🔧 Pronto para testar o fluxo OAuth dinâmico do Evolution...</div>
+        </div>
+    </div>
+
+    <script>
+        // Estado global do fluxo OAuth
+        let oauthState = {
+            metadata: null,
+            clientData: null,
+            authParams: null,
+            authCode: null,
+            tokens: null,
+            currentStep: 0
+        };
+
+        // Utilitário para logging
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            logElement.appendChild(entry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+                // Sistema de retry manual para etapas
+        async function executeStep(stepFunction, stepName, stepNum) {
+            try {
+                updateStepStatus(stepNum, 'active');
+                const result = await stepFunction();
+                updateStepStatus(stepNum, 'completed');
+                hideRetryButton(stepNum);
+                return result;
+            } catch (error) {
+                log(`❌ Erro em ${stepName}: ${error.message}`, 'error');
+                updateStepStatus(stepNum, 'error');
+                showRetryButton(stepNum, stepFunction, stepName);
+                throw error;
+            }
+        }
+
+        // Mostrar botão de retry para uma etapa específica
+        function showRetryButton(stepNum, stepFunction, stepName) {
+            const step = document.getElementById(`step${stepNum}`);
+
+            // Remover botão existente se houver
+            const existingButton = step.querySelector('.retry-btn');
+            if (existingButton) {
+                existingButton.remove();
+            }
+
+            // Criar novo botão de retry
+            const retryButton = document.createElement('button');
+            retryButton.className = 'btn retry-btn';
+            retryButton.innerHTML = '🔄 Tentar Novamente';
+            retryButton.style.marginTop = '10px';
+            retryButton.onclick = async () => {
+                log(`🔄 Tentando novamente: ${stepName}`, 'info');
+                try {
+                    await executeStep(stepFunction, stepName, stepNum);
+                    log(`✅ ${stepName} executado com sucesso!`, 'success');
+                } catch (error) {
+                    log(`❌ ${stepName} falhou novamente: ${error.message}`, 'error');
+                }
+            };
+
+            step.querySelector('.step-content').appendChild(retryButton);
+        }
+
+        // Esconder botão de retry
+        function hideRetryButton(stepNum) {
+            const step = document.getElementById(`step${stepNum}`);
+            const retryButton = step.querySelector('.retry-btn');
+            if (retryButton) {
+                retryButton.remove();
+            }
+        }
+
+        // Utilitário para gerar string aleatória
+        function generateRandomString(length = 32) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // Utilitário para base64url encoding
+        async function base64urlEncode(str) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(str);
+            const hash = await crypto.subtle.digest('SHA-256', data);
+            return btoa(String.fromCharCode(...new Uint8Array(hash)))
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=/g, '');
+        }
+
+        // Utilitário para atualizar UI dos passos
+        function updateStepStatus(stepNum, status) {
+            const step = document.getElementById(`step${stepNum}`);
+            step.className = `step ${status}`;
+            if (status === 'active') {
+                oauthState.currentStep = stepNum;
+            }
+        }
+
+        // Utilitário para mostrar dados do passo
+        function showStepData(stepNum, data) {
+            const dataElement = document.getElementById(`${getStepDataId(stepNum)}-data`);
+            dataElement.textContent = JSON.stringify(data, null, 2);
+            dataElement.style.display = 'block';
+        }
+
+        function getStepDataId(stepNum) {
+            const ids = ['', 'metadata', 'registration', 'auth-prep', 'auth-request', 'token', 'complete', 'api-test'];
+            return ids[stepNum];
+        }
+
+        // Passo 1: Metadata Discovery
+        async function discoverMetadata() {
+            updateStepStatus(1, 'active');
+            log('🔍 Iniciando descoberta de metadados OAuth...', 'info');
+
+            try {
+                const evolutionUrl = document.getElementById('evolutionUrl').value;
+                const metadataUrl = `${evolutionUrl}/.well-known/oauth-authorization-server`;
+
+                log(`📡 Fazendo requisição para: ${metadataUrl}`, 'info');
+
+                const response = await fetch(metadataUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const metadata = await response.json();
+                oauthState.metadata = metadata;
+
+                log('✅ Metadados OAuth descobertos com sucesso!', 'success');
+                showStepData(1, metadata);
+                updateStepStatus(1, 'completed');
+
+                return metadata;
+            } catch (error) {
+                log(`❌ Erro na descoberta de metadados: ${error.message}`, 'error');
+                updateStepStatus(1, 'error');
+                throw error;
+            }
+        }
+
+        // Função para alternar modo OAuth
+        function toggleOAuthMode() {
+            const oauthMode = document.getElementById('oauthMode').value;
+            const existingConfig = document.getElementById('existingAppConfig');
+            const rfc7591Config = document.getElementById('rfc7591AppConfig');
+            const dynamicConfig = document.getElementById('dynamicAppConfig');
+
+            // Esconder todas as configurações
+            existingConfig.style.display = 'none';
+            rfc7591Config.style.display = 'none';
+            dynamicConfig.style.display = 'none';
+
+            if (oauthMode === 'rfc7591') {
+                rfc7591Config.style.display = 'block';
+                log('🔄 Modo RFC 7591 - Registro Dinâmico ativado', 'info');
+                log('📝 Aplicação será registrada automaticamente via /oauth/register', 'info');
+            } else if (oauthMode === 'dynamic') {
+                dynamicConfig.style.display = 'block';
+
+                // Gerar client_id dinâmico
+                const accountId = document.getElementById('accountId').value;
+                const dynamicClientId = `dynamic_account_${accountId}`;
+                document.getElementById('dynamicClientId').value = dynamicClientId;
+
+                log('🔄 Modo OAuth Dinâmico (Sistema Legado) ativado', 'info');
+                log(`🆔 Client ID dinâmico: ${dynamicClientId}`, 'info');
+            } else {
+                existingConfig.style.display = 'block';
+                log('🔄 Modo OAuth com Aplicação Existente ativado', 'info');
+            }
+        }
+
+        // Função para registro RFC 7591
+        async function registerRFC7591Application() {
+            const evolutionUrl = document.getElementById('evolutionUrl').value;
+            const clientName = document.getElementById('rfc7591ClientName').value;
+            const redirectUri = document.getElementById('redirectUri').value;
+
+            log('📝 Registrando aplicação via RFC 7591...', 'info');
+
+            const registrationData = {
+                client_name: clientName,
+                redirect_uris: [redirectUri],
+                grant_types: ['authorization_code', 'refresh_token'],
+                response_types: ['code'],
+                token_endpoint_auth_method: 'client_secret_post',
+                scope: 'admin'
+            };
+
+            const response = await fetch(`${evolutionUrl}/oauth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(registrationData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Registro RFC 7591 falhou: ${errorData.error_description || response.statusText}`);
+            }
+
+            const registrationResult = await response.json();
+
+            // Atualizar campos na interface
+            document.getElementById('rfc7591ClientId').value = registrationResult.client_id;
+            document.getElementById('rfc7591ClientSecret').value = registrationResult.client_secret;
+
+            log('✅ Aplicação registrada via RFC 7591!', 'success');
+            log(`🔑 Client ID: ${registrationResult.client_id}`, 'info');
+            log(`🔐 Client Secret: ${registrationResult.client_secret.substring(0, 10)}...`, 'info');
+
+            return registrationResult;
+        }
+
+        // Passo 2: OAuth Application Setup
+        async function setupOAuthApplication() {
+            updateStepStatus(2, 'active');
+            log('📝 Configurando aplicação OAuth...', 'info');
+
+            try {
+                const oauthMode = document.getElementById('oauthMode').value;
+                const redirectUri = document.getElementById('redirectUri').value;
+                let clientData;
+
+                if (oauthMode === 'rfc7591') {
+                    // Modo RFC 7591 - Registro Dinâmico
+                    const registrationResult = await registerRFC7591Application();
+
+                    clientData = {
+                        client_id: registrationResult.client_id,
+                        client_secret: registrationResult.client_secret,
+                        redirect_uris: [redirectUri],
+                        grant_types: ['authorization_code', 'refresh_token'],
+                        response_types: ['code'],
+                        token_endpoint_auth_method: 'client_secret_post',
+                        scope: 'admin',
+                        rfc7591_registered: true
+                    };
+
+                    log('🔧 Usando aplicação registrada via RFC 7591...', 'info');
+
+                } else if (oauthMode === 'dynamic') {
+                    // Modo OAuth Dinâmico (Sistema Legado)
+                    const accountId = document.getElementById('accountId').value;
+                    const dynamicClientId = `dynamic_account_${accountId}`;
+
+                    log('🔧 Usando OAuth Dinâmico (Sistema Legado)...', 'info');
+                    log(`🆔 Client ID dinâmico: ${dynamicClientId}`, 'info');
+
+                    // Para OAuth dinâmico, o secret será descoberto após a autorização
+                    clientData = {
+                        client_id: dynamicClientId,
+                        client_secret: null, // Será descoberto depois
+                        redirect_uris: [redirectUri],
+                        grant_types: ['authorization_code', 'refresh_token'],
+                        response_types: ['code'],
+                        token_endpoint_auth_method: 'client_secret_post',
+                        scope: 'admin',
+                        dynamic_mode: true
+                    };
+
+                    document.getElementById('dynamicClientId').value = dynamicClientId;
+
+                } else {
+                    // Modo Aplicação Existente
+                    const clientId = document.getElementById('clientId').value;
+                    const clientSecret = document.getElementById('clientSecret').value;
+
+                    if (!clientId || !clientSecret) {
+                        throw new Error('Client ID e Client Secret são obrigatórios para aplicação existente');
+                    }
+
+                    log('🔧 Usando aplicação OAuth existente...', 'info');
+
+                    clientData = {
+                        client_id: clientId,
+                        client_secret: clientSecret,
+                        redirect_uris: [redirectUri],
+                        grant_types: ['authorization_code', 'refresh_token'],
+                        response_types: ['code'],
+                        token_endpoint_auth_method: 'client_secret_post',
+                        scope: 'admin',
+                        existing_app: true
+                    };
+                }
+
+                oauthState.clientData = clientData;
+
+                log('✅ Aplicação OAuth configurada!', 'success');
+                log(`🔑 Client ID: ${clientData.client_id}`, 'info');
+                showStepData(2, clientData);
+                updateStepStatus(2, 'completed');
+
+                return clientData;
+            } catch (error) {
+                log(`❌ Erro na configuração: ${error.message}`, 'error');
+                updateStepStatus(2, 'error');
+                throw error;
+            }
+        }
+
+        // Passo 3: Preparing Authorization
+        async function prepareAuthorization() {
+            updateStepStatus(3, 'active');
+            log('⚙️ Preparando parâmetros de autorização...', 'info');
+
+            try {
+                const redirectUri = document.getElementById('redirectUri').value;
+
+                // Gerar parâmetros PKCE
+                const codeVerifier = generateRandomString(128);
+                const codeChallenge = await base64urlEncode(codeVerifier);
+                const state = generateRandomString(32);
+
+                const authParams = {
+                    response_type: 'code',
+                    client_id: oauthState.clientData.client_id,
+                    redirect_uri: redirectUri,
+                    scope: 'admin',
+                    state: state,
+                    code_challenge: codeChallenge,
+                    code_challenge_method: 'S256',
+                    code_verifier: codeVerifier // Guardar para usar no token exchange
+                };
+
+                oauthState.authParams = authParams;
+
+                log('✅ Parâmetros de autorização preparados!', 'success');
+                log(`🔐 PKCE Code Challenge: ${codeChallenge}`, 'info');
+                showStepData(3, authParams);
+                updateStepStatus(3, 'completed');
+
+                return authParams;
+            } catch (error) {
+                log(`❌ Erro na preparação da autorização: ${error.message}`, 'error');
+                updateStepStatus(3, 'error');
+                throw error;
+            }
+        }
+
+        // Passo 4: Request Authorization
+        async function requestAuthorization() {
+            updateStepStatus(4, 'active');
+            log('🔐 Iniciando fluxo de autorização...', 'info');
+
+            try {
+                const evolutionUrl = document.getElementById('evolutionUrl').value;
+                const authEndpoint = oauthState.metadata.authorization_endpoint || `${evolutionUrl}/oauth/authorize`;
+
+                const params = new URLSearchParams({
+                    response_type: oauthState.authParams.response_type,
+                    client_id: oauthState.authParams.client_id,
+                    redirect_uri: oauthState.authParams.redirect_uri,
+                    scope: oauthState.authParams.scope,
+                    state: oauthState.authParams.state,
+                    code_challenge: oauthState.authParams.code_challenge,
+                    code_challenge_method: oauthState.authParams.code_challenge_method
+                });
+
+                const authUrl = `${authEndpoint}?${params.toString()}`;
+
+                log('🌐 URL de autorização gerada:', 'info');
+                log(authUrl, 'info');
+
+                showStepData(4, {
+                    authorization_url: authUrl,
+                    parameters: Object.fromEntries(params.entries())
+                });
+
+                log('⏳ Aguardando autorização do usuário...', 'info');
+                log('👆 Clique no botão "Continuar" após completar a autorização', 'info');
+
+                // Mostrar botão para continuar e abrir URL
+                document.getElementById('continueBtn').style.display = 'inline-block';
+                window.open(authUrl, '_blank');
+
+                updateStepStatus(4, 'completed');
+                return authUrl;
+            } catch (error) {
+                log(`❌ Erro na solicitação de autorização: ${error.message}`, 'error');
+                updateStepStatus(4, 'error');
+                throw error;
+            }
+        }
+
+        // Passo 5: Token Request
+        async function exchangeCodeForToken() {
+            updateStepStatus(5, 'active');
+            log('🔄 Trocando código de autorização por token...', 'info');
+
+            try {
+                // Simular código de autorização recebido
+                const authCode = prompt('Cole o código de autorização recebido (parâmetro "code" da URL de callback):');
+                if (!authCode) {
+                    throw new Error('Código de autorização não fornecido');
+                }
+
+                oauthState.authCode = authCode;
+                log(`📋 Código de autorização recebido: ${authCode.substring(0, 10)}...`, 'info');
+
+                // Para OAuth dinâmico (sistema legado), descobrir o client_secret
+                let clientSecret = oauthState.clientData.client_secret;
+                if (oauthState.clientData.dynamic_mode && !clientSecret) {
+                    clientSecret = await discoverDynamicClientSecret(oauthState.clientData.client_id);
+                    oauthState.clientData.client_secret = clientSecret;
+                } else if (oauthState.clientData.rfc7591_registered) {
+                    log('🔧 Usando client_secret da aplicação RFC 7591...', 'info');
+                } else if (oauthState.clientData.existing_app) {
+                    log('🔧 Usando client_secret da aplicação existente...', 'info');
+                }
+
+                const evolutionUrl = document.getElementById('evolutionUrl').value;
+                const tokenEndpoint = oauthState.metadata.token_endpoint || `${evolutionUrl}/oauth/token`;
+
+                const tokenData = {
+                    grant_type: 'authorization_code',
+                    code: authCode,
+                    redirect_uri: oauthState.authParams.redirect_uri,
+                    client_id: oauthState.clientData.client_id,
+                    client_secret: clientSecret || oauthState.clientData.client_secret,
+                    code_verifier: oauthState.authParams.code_verifier
+                };
+
+                log('📤 Enviando requisição de token...', 'info');
+
+                const response = await fetch(tokenEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams(tokenData)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const tokens = await response.json();
+                oauthState.tokens = tokens;
+
+                log('✅ Tokens OAuth obtidos com sucesso!', 'success');
+                showStepData(5, tokens);
+                updateStepStatus(5, 'completed');
+
+                return tokens;
+            } catch (error) {
+                log(`❌ Erro na troca de token: ${error.message}`, 'error');
+                updateStepStatus(5, 'error');
+                throw error;
+            }
+        }
+
+        // Passo 6: Authentication Complete
+        async function completeAuthentication() {
+            updateStepStatus(6, 'active');
+            log('🎉 Finalizando autenticação OAuth...', 'success');
+
+            try {
+                const completionData = {
+                    status: 'success',
+                    access_token: oauthState.tokens.access_token,
+                    token_type: oauthState.tokens.token_type,
+                    expires_in: oauthState.tokens.expires_in,
+                    scope: oauthState.tokens.scope,
+                    refresh_token: oauthState.tokens.refresh_token,
+                    client_id: oauthState.clientData.client_id,
+                    flow_completed_at: new Date().toISOString()
+                };
+
+                showStepData(6, completionData);
+                updateStepStatus(6, 'completed');
+
+                log('🎊 Fluxo OAuth concluído com sucesso!', 'success');
+                log('🔑 Token de acesso obtido, pronto para testar API OAuth de Inboxes', 'info');
+
+                return completionData;
+            } catch (error) {
+                log(`❌ Erro na finalização: ${error.message}`, 'error');
+                updateStepStatus(6, 'error');
+                throw error;
+            }
+        }
+
+        // Passo 7: API Test - List Inboxes
+        async function testListInboxes() {
+            updateStepStatus(7, 'active');
+            log('📋 Testando API OAuth - Listando inboxes...', 'info');
+
+            try {
+                const evolutionUrl = document.getElementById('evolutionUrl').value;
+                const accessToken = oauthState.tokens.access_token;
+
+                log('📤 Enviando requisição para listar inboxes...', 'info');
+                log(`🎯 URL: ${evolutionUrl}/api/v1/oauth/inboxes`, 'info');
+                log('✨ Usando endpoint OAuth', 'info');
+
+                const response = await fetch(`${evolutionUrl}/api/v1/oauth/inboxes`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const responseData = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(responseData)}`);
+                }
+
+                const testResult = {
+                    status: 'success',
+                    request: {
+                        method: 'GET',
+                        url: `${evolutionUrl}/api/v1/oauth/inboxes`,
+                        headers: {
+                            'Authorization': `Bearer ${accessToken.substring(0, 20)}...`,
+                            'Content-Type': 'application/json'
+                        },
+                        note: 'OAuth endpoint'
+                    },
+                    response: {
+                        status: response.status,
+                        data: responseData,
+                        inbox_count: Array.isArray(responseData.payload) ? responseData.payload.length : 0
+                    },
+                    tested_at: new Date().toISOString()
+                };
+
+                oauthState.apiTestResult = testResult;
+
+                const inboxCount = Array.isArray(responseData.payload) ? responseData.payload.length : 0;
+                log('✅ Inboxes listadas com sucesso via API OAuth!', 'success');
+                log(`📊 Total de inboxes encontradas: ${inboxCount}`, 'info');
+
+                if (inboxCount > 0) {
+                    log('📋 Tipos de canal encontrados:', 'info');
+                    const channelTypes = responseData.payload.map(inbox => inbox.channel_type || 'N/A');
+                    const uniqueTypes = [...new Set(channelTypes)];
+                    uniqueTypes.forEach(type => log(`  • ${type}`, 'info'));
+                }
+
+                showStepData(7, testResult);
+                updateStepStatus(7, 'completed');
+
+                return testResult;
+            } catch (error) {
+                const errorResult = {
+                    status: 'error',
+                    error: error.message,
+                    tested_at: new Date().toISOString(),
+                    endpoint_tested: 'GET /api/v1/oauth/inboxes'
+                };
+
+                log(`❌ Erro ao testar API OAuth: ${error.message}`, 'error');
+                showStepData(7, errorResult);
+                updateStepStatus(7, 'error');
+                throw error;
+            }
+        }
+
+        // Função principal para iniciar o fluxo
+        async function startOAuthFlow() {
+            log('🚀 Iniciando teste completo do fluxo OAuth com retry manual...', 'info');
+            log('💡 Se alguma etapa falhar, você pode usar o botão "Tentar Novamente"', 'info');
+
+            try {
+                document.getElementById('startBtn').disabled = true;
+
+                // Executar passos sequencialmente
+                await executeStep(discoverMetadata, 'Descoberta de Metadados', 1);
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Delay visual
+
+                await executeStep(setupOAuthApplication, 'Configuração da Aplicação OAuth', 2);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                await executeStep(prepareAuthorization, 'Preparação da Autorização', 3);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                await executeStep(requestAuthorization, 'Solicitação de Autorização', 4);
+
+                // Os próximos passos serão executados pelo handleAuthCallback
+
+            } catch (error) {
+                log(`⚠️ Uma etapa falhou. Use o botão "Tentar Novamente" na etapa que falhou.`, 'error');
+                document.getElementById('startBtn').disabled = false;
+            }
+        }
+
+        // Função para lidar com o callback após autorização
+        async function handleAuthCallback() {
+            try {
+                document.getElementById('continueBtn').style.display = 'none';
+
+                await executeStep(exchangeCodeForToken, 'Troca de Código por Token', 5);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                await executeStep(completeAuthentication, 'Finalização da Autenticação', 6);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                await executeStep(testListInboxes, 'Teste da API de Inboxes', 7);
+
+                log('✨ Teste OAuth + API de Inboxes concluído! Todos os passos foram executados com sucesso.', 'success');
+
+            } catch (error) {
+                log(`⚠️ Uma etapa falhou. Use o botão "Tentar Novamente" na etapa que falhou.`, 'error');
+            }
+
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        // Função para resetar o fluxo
+        function resetFlow() {
+            oauthState = {
+                metadata: null,
+                clientData: null,
+                authParams: null,
+                authCode: null,
+                tokens: null,
+                apiTestResult: null,
+                currentStep: 0
+            };
+
+            // Resetar UI dos passos
+            for (let i = 1; i <= 7; i++) {
+                const step = document.getElementById(`step${i}`);
+                step.className = 'step';
+                const dataElement = document.getElementById(`${getStepDataId(i)}-data`);
+                if (dataElement) {
+                    dataElement.style.display = 'none';
+                }
+                // Remover botões de retry
+                hideRetryButton(i);
+            }
+
+            // Resetar controles
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('continueBtn').style.display = 'none';
+
+            // Limpar log
+            document.getElementById('log').innerHTML =
+                '<div class="log-entry info">🔧 Fluxo resetado. Pronto para novo teste...</div>';
+
+            log('🔄 Fluxo OAuth resetado com sucesso!', 'info');
+        }
+
+        // Atualizar client_id dinâmico
+        function updateDynamicClientId() {
+            const oauthMode = document.getElementById('oauthMode').value;
+            if (oauthMode === 'dynamic') {
+                const accountId = document.getElementById('accountId').value;
+                const dynamicClientId = `dynamic_account_${accountId}`;
+                document.getElementById('dynamicClientId').value = dynamicClientId;
+                log(`🔄 Client ID dinâmico atualizado: ${dynamicClientId}`, 'info');
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🔧 Página de teste OAuth carregada e pronta!', 'info');
+
+            // Configurar listeners
+            document.getElementById('accountId').addEventListener('input', updateDynamicClientId);
+
+            // Inicializar modo OAuth
+            toggleOAuthMode();
+        });
+    </script>
+</body>
+</html>

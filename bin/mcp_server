@@ -1,0 +1,140 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# MCP Server standalone runner
+# Usage: bin/mcp_server
+
+require_relative '../config/environment'
+
+puts "🚀 Starting MCP Server..."
+puts "   Environment: #{Rails.env}"
+puts "   Ruby: #{RUBY_VERSION}"
+puts "   Rails: #{Rails.version}"
+puts ""
+
+# Load all MCP tools and resources
+puts "📦 Loading MCP tools and resources..."
+tool_files = Dir[Rails.root.join('app/mcp/tools/**/*.rb')]
+tool_files.each { |file| require file }
+
+resource_file = Rails.root.join('app/mcp/application_resource.rb')
+require resource_file if File.exist?(resource_file)
+
+resource_files = Dir[Rails.root.join('app/mcp/resources/*.rb')]
+resource_files.each { |file| require file }
+
+# Count loaded components
+tools = ApplicationTool.descendants
+resources = defined?(ApplicationResource) ? ApplicationResource.descendants : []
+
+puts "   ✓ #{tools.count} tools loaded"
+puts "   ✓ #{resources.count} resources loaded"
+puts ""
+
+# Create minimal Rack app for MCP only
+require 'rack'
+require 'rack/cors'
+
+# Build middleware stack for MCP
+app = Rack::Builder.new do
+  # CORS middleware
+  use Rack::Cors do
+    allow do
+      origins '*'
+      resource '*',
+        headers: :any,
+        methods: [:get, :post, :put, :patch, :delete, :options, :head],
+        credentials: false
+    end
+  end
+
+  # Doorkeeper auth middleware (reuse from main app)
+  use Class.new do
+    def initialize(app)
+      @app = app
+    end
+
+    def call(env)
+      # Extract token from Authorization header or query parameter
+      token = nil
+
+      if env['HTTP_AUTHORIZATION']&.start_with?('Bearer ')
+        token = env['HTTP_AUTHORIZATION'].sub(/^Bearer /, '')
+      elsif env['QUERY_STRING']&.include?('access_token=')
+        token = Rack::Utils.parse_query(env['QUERY_STRING'])['access_token']
+      end
+
+      if token
+        access_token = Doorkeeper::AccessToken.by_token(token)
+        if access_token && !access_token.expired? && access_token.acceptable?('admin')
+          resource_owner = access_token.resource_owner
+          current_account = resource_owner.account_users.find_by(role: ['administrator', 'account_admin', 'agent'])&.account
+
+          # Store in Thread.current for tools to access
+          Thread.current[:mcp_authenticated_user] = resource_owner
+          Thread.current[:mcp_current_account] = current_account
+          Thread.current[:mcp_doorkeeper_token] = access_token
+
+          puts "✓ Authenticated: #{resource_owner.name} (Account: #{current_account&.name})"
+        else
+          puts "✗ Invalid or expired token"
+        end
+      end
+
+      @app.call(env)
+    end
+  end
+
+  # FastMCP transport
+  use FastMcp::Transports::RackTransport,
+      server: FastMcp::Server.new(
+        name: 'evolution-mcp-server',
+        version: '1.0.0'
+      ).tap do |server|
+        server.register_tools(*tools) if tools.any?
+        server.register_resources(*resources) if resources.any?
+
+        puts "🔗 MCP Server configured:"
+        puts "   Name: evolution-mcp-server"
+        puts "   Version: 1.0.0"
+        puts "   Tools: #{tools.count}"
+        puts "   Resources: #{resources.count}"
+        puts ""
+      end
+
+  # Fallback app
+  run lambda { |env|
+    [404, {'Content-Type' => 'text/plain'}, ['MCP Server - Route not found']]
+  }
+end
+
+# Start server
+# Use port 3001 for standalone MCP server, different from main app (3000)
+port = ENV['MCP_PORT'] || ENV['PORT'] || 3001
+host = ENV['HOST'] || '0.0.0.0'
+threads = ENV['PUMA_THREADS'] || '5:32'
+workers = ENV['PUMA_WORKERS']&.to_i || 1
+
+puts "🌐 Starting MCP Server STANDALONE on http://#{host}:#{port}"
+puts "   SSE Endpoint: http://#{host}:#{port}/sse"
+puts "   Messages Endpoint: http://#{host}:#{port}/messages"
+puts "   Threads: #{threads}"
+puts "   Workers: #{workers}"
+puts ""
+puts "⚠️  This is MCP-ONLY server (no Rails app, no dashboard)"
+puts "💡 Use Ctrl+C to stop"
+puts "=" * 50
+
+begin
+  Rack::Handler::Puma.run(app, {
+    Host: host,
+    Port: port,
+    Threads: threads,
+    Workers: workers,
+    Preload: Rails.env.production?,
+    Quiet: Rails.env.production?
+  })
+rescue Interrupt
+  puts "\n👋 MCP Server shutting down..."
+  exit 0
+end

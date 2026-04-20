@@ -1,0 +1,26 @@
+Hi <%= @assignee.name %>,
+
+⚠️ OVERDUE TASK ALERT ⚠️
+
+The following task is now OVERDUE:
+
+<%= @task.title %>
+<% if @task.description.present? %>
+Description: <%= @task.description %>
+<% end %>
+
+Task Type: <%= @task.task_type.titleize %>
+Priority: <%= @task.priority.titleize %>
+Due Date: <%= @task.due_date.strftime('%B %d, %Y at %I:%M %p') %>
+Overdue by: <%= @task.days_until_due.abs %> day(s)
+
+<% if @conversation.present? %>
+Related to conversation: <%= @conversation.display_id %>
+<% elsif @contact.present? %>
+Related to contact: <%= @contact.name %>
+<% end %>
+
+This task requires your immediate attention. Please complete it as soon as possible.
+
+Best regards,
+<%= @account_name %> Team

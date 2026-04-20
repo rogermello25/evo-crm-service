@@ -1,0 +1,648 @@
+# This file contains all the installation wide configuration which controls various settings in Evolution
+# This is internal config and should not be modified by the user directly in database
+# Evolution might override and modify these values during the upgrade process
+# Configs which can be modified by the user are available in the dashboard under appropriate UI
+#
+# name: the name of the config referenced in the code
+# value: the value of the config
+# display_title: the title of the config displayed in the dashboard UI
+# description: the description of the config displayed in the dashboard UI
+# locked: if you don't specify locked attribute in yaml, the default value will be true,
+#         which means the particular config will be locked and won't be available in the admin installation configs UI
+# premium: These values get overwritten unless the user is on a premium plan
+# type: The type of the config. Default is text,  boolean is also supported
+
+# ------- Branding Related Config ------- #
+- name: INSTALLATION_NAME
+  value: 'Evolution'
+  display_title: 'Installation Name'
+  description: 'The installation wide name that would be used in the dashboard, title etc.'
+- name: LOGO_THUMBNAIL
+  value: '/brand-assets/logo_thumbnail.svg'
+  display_title: 'Logo Thumbnail'
+  description: 'The thumbnail that would be used for favicon (512px X 512px)'
+- name: LOGO
+  value: '/brand-assets/logo.svg'
+  display_title: 'Logo'
+  description: 'The logo that would be used on the dashboard, login page etc.'
+- name: LOGO_DARK
+  value: '/brand-assets/logo_dark.svg'
+  display_title: 'Logo Dark Mode'
+  description: 'The logo that would be used on the dashboard, login page etc. for dark mode'
+- name: BRAND_URL
+  value: 'https://evoai.app'
+  display_title: 'Brand URL'
+  description: 'The URL that would be used in emails under the section "Powered By"'
+- name: WIDGET_BRAND_URL
+  value: 'https://evoai.app'
+  display_title: 'Widget Brand URL'
+  description: 'The URL that would be used in the widget under the section "Powered By"'
+- name: BRAND_NAME
+  value: 'Evolution'
+  display_title: 'Brand Name'
+  description: 'The name that would be used in emails and the widget'
+- name: TERMS_URL
+  value: 'https://evoai.app/terms-of-service'
+  display_title: 'Terms URL'
+  description: 'The terms of service URL displayed in Signup Page'
+- name: PRIVACY_URL
+  value: 'https://evoai.app/privacy-policy'
+  display_title: 'Privacy URL'
+  description: 'The privacy policy URL displayed in the app'
+- name: DISPLAY_MANIFEST
+  value: true
+  display_title: 'Evolution Metadata'
+  description: 'Display default Evolution metadata like favicons and upgrade warnings'
+  type: boolean
+
+# ------- End of Branding Related Config ------- #
+
+# ------- Signup & Account Related Config ------- #
+- name: ENABLE_ACCOUNT_SIGNUP
+  display_title: 'Enable Account Signup'
+  value: false
+  description: 'Allow users to signup for new accounts'
+  locked: false
+  type: boolean
+- name: CREATE_NEW_ACCOUNT_FROM_DASHBOARD
+  value: false
+  description: 'Allow users to create new accounts from the dashboard'
+  locked: false
+- name: HCAPTCHA_SITE_KEY
+  value:
+  locked: false
+- name: HCAPTCHA_SERVER_KEY
+  value:
+  locked: false
+- name: INSTALLATION_EVENTS_WEBHOOK_URL
+  value:
+  display_title: 'System events Webhook URL'
+  description: 'The URL to which the system events like new accounts created will be sent'
+  locked: false
+- name: DIRECT_UPLOADS_ENABLED
+  type: boolean
+  value: false
+  description: 'Enable direct uploads to cloud storage'
+  locked: false
+# ------- End of Account Related Config ------- #
+
+# ------- Email Related Config ------- #
+- name: SMTP_ADDRESS
+  display_title: 'SMTP Server Address'
+  value:
+  locked: false
+  description: 'SMTP server hostname (e.g., smtp.gmail.com)'
+  type: text
+- name: SMTP_PORT
+  display_title: 'SMTP Port'
+  value: '587'
+  locked: false
+  description: 'SMTP server port (e.g., 587 for STARTTLS, 465 for SSL)'
+  type: text
+- name: SMTP_USERNAME
+  display_title: 'SMTP Username'
+  value:
+  locked: false
+  description: 'SMTP authentication username'
+  type: text
+- name: SMTP_PASSWORD_SECRET
+  display_title: 'SMTP Password'
+  value:
+  locked: false
+  description: 'SMTP authentication password'
+  type: secret
+- name: SMTP_AUTHENTICATION
+  display_title: 'SMTP Authentication'
+  value: 'login'
+  locked: false
+  description: 'SMTP authentication method (e.g., login, plain, cram_md5)'
+  type: text
+- name: SMTP_DOMAIN
+  display_title: 'SMTP Domain'
+  value:
+  locked: false
+  description: 'SMTP HELO/EHLO domain'
+  type: text
+- name: SMTP_ENABLE_STARTTLS_AUTO
+  display_title: 'Enable STARTTLS Auto'
+  value: true
+  locked: false
+  description: 'Automatically enable STARTTLS if the server supports it'
+  type: boolean
+- name: SMTP_OPENSSL_VERIFY_MODE
+  display_title: 'OpenSSL Verify Mode'
+  value:
+  locked: false
+  description: 'OpenSSL verification mode (e.g., none, peer)'
+  type: text
+- name: MAILER_SENDER_EMAIL
+  display_title: 'Mailer Sender Email'
+  value:
+  locked: false
+  description: 'Default sender email address for outgoing emails (e.g., Evolution <accounts@evoai.app>)'
+  type: text
+- name: MAILER_TYPE
+  display_title: 'Mailer Type'
+  value: 'smtp'
+  locked: false
+  description: 'Email delivery provider type (smtp, bms, or resend)'
+  type: text
+- name: RESEND_API_SECRET
+  display_title: 'Resend API Secret'
+  value:
+  locked: false
+  description: 'Resend email provider API key'
+  type: secret
+## ------ Inbound Email Configuration ------ ##
+- name: RAILS_INBOUND_EMAIL_SERVICE
+  display_title: 'Inbound Email Service'
+  value: 'relay'
+  locked: false
+  description: 'Inbound email ingress provider (relay, mailgun, mandrill, sendgrid)'
+  type: text
+- name: RAILS_INBOUND_EMAIL_PASSWORD_SECRET
+  display_title: 'Inbound Email Password'
+  value:
+  locked: false
+  description: 'Password for Action Mailbox ingress authentication'
+  type: secret
+- name: MAILER_INBOUND_EMAIL_DOMAIN
+  display_title: 'Inbound Email Domain'
+  value:
+  locked: false
+  description: 'The domain name to be used for generating conversation continuity emails (reply+id@domain.com)'
+  type: text
+- name: MAILGUN_SIGNING_SECRET
+  display_title: 'Mailgun Signing Key'
+  value:
+  locked: false
+  description: 'Mailgun webhook signing key for inbound email verification'
+  type: secret
+- name: MANDRILL_API_SECRET
+  display_title: 'Mandrill API Key'
+  value:
+  locked: false
+  description: 'Mandrill API key for inbound email processing'
+  type: secret
+## ------ End Inbound Email Configuration ------ ##
+- name: MAILER_SUPPORT_EMAIL
+  value:
+  locked: false
+# ------- End of Email Related Config ------- #
+
+## ------ Cloud Storage Configuration ------ ##
+- name: ACTIVE_STORAGE_SERVICE
+  display_title: 'Storage Service'
+  value: 'local'
+  locked: false
+  description: 'Active storage provider (local, amazon, s3_compatible, google, microsoft)'
+  type: text
+- name: STORAGE_BUCKET_NAME
+  display_title: 'Bucket Name'
+  value:
+  locked: false
+  description: 'S3/R2 bucket name for file uploads'
+  type: text
+- name: STORAGE_ACCESS_KEY_ID
+  display_title: 'Access Key ID'
+  value:
+  locked: false
+  description: 'S3-compatible access key ID'
+  type: text
+- name: STORAGE_ACCESS_SECRET
+  display_title: 'Secret Access Key'
+  value:
+  locked: false
+  description: 'S3-compatible secret access key'
+  type: secret
+- name: STORAGE_REGION
+  display_title: 'Region'
+  value:
+  locked: false
+  description: 'S3 region (e.g., us-east-1, auto for R2)'
+  type: text
+- name: STORAGE_ENDPOINT
+  display_title: 'Endpoint URL'
+  value:
+  locked: false
+  description: 'Custom endpoint for S3-compatible providers (e.g., Cloudflare R2, DigitalOcean Spaces)'
+  type: text
+## ------ End Cloud Storage Configuration ------ ##
+
+# ------- Facebook Channel Related Config ------- #
+- name: FB_APP_ID
+  display_title: 'Facebook App ID'
+  locked: false
+- name: FB_VERIFY_TOKEN
+  display_title: 'Facebook Verify Token'
+  description: 'The verify token used for Facebook Messenger Webhook'
+  locked: false
+  type: secret
+- name: FB_APP_SECRET
+  display_title: 'Facebook App Secret'
+  locked: false
+  type: secret
+- name: IG_VERIFY_TOKEN
+  display_title: 'Instagram Verify Token'
+  description: 'The verify token used for Instagram Webhook'
+  locked: false
+  type: secret
+- name: FACEBOOK_API_VERSION
+  display_title: 'Facebook API Version'
+  description: 'Configure this if you want to use a different Facebook API version. Make sure its prefixed with `v`'
+  value: 'v17.0'
+  locked: false
+- name: ENABLE_MESSENGER_CHANNEL_HUMAN_AGENT
+  display_title: 'Enable human agent'
+  value: false
+  locked: false
+  description: 'Enable human agent for messenger channel for longer message back period. Needs additional app approval: https://developers.facebook.com/docs/features-reference/human-agent/'
+  type: boolean
+# ------- End of Facebook Channel Related Config ------- #
+
+# ------- WhatsApp Channel Related Config ------- #
+- name: WP_APP_ID
+  display_title: 'WhatsApp App ID'
+  description: 'The WhatsApp App ID used for WhatsApp Business API'
+  locked: false
+- name: WP_VERIFY_TOKEN
+  display_title: 'WhatsApp Verify Token'
+  description: 'The WhatsApp Verify Token used for WhatsApp Business API'
+  locked: false
+  type: secret
+- name: WP_APP_SECRET
+  display_title: 'WhatsApp App Secret'
+  description: 'The WhatsApp App Secret used for WhatsApp Business API'
+  locked: false
+  type: secret
+- name: WP_WHATSAPP_CONFIG_ID
+  display_title: 'WhatsApp Config ID'
+  description: 'The WhatsApp Config ID used for WhatsApp Business API'
+  locked: false
+- name: WP_API_VERSION
+  display_title: 'WhatsApp API Version'
+  description: 'The WhatsApp API Version used for WhatsApp Business API'
+  value: 'v23.0'
+  locked: false
+# ------- End of WhatsApp Channel Related Config ------- #
+
+# MARK: Microsoft Email Channel Config
+- name: AZURE_APP_ID
+  display_title: 'Azure App ID'
+  description: 'The App ID that will be used to authenticate with customer Microsoft accounts. Find more details on setting up Azure here: https://chwt.app/dev/ms'
+  locked: false
+- name: AZURE_APP_SECRET
+  display_title: 'Azure App Secret'
+  locked: false
+  type: secret
+# End of Microsoft Email Channel Config
+
+# ------- Evolution Internal Config ----#
+- name: DEPLOYMENT_ENV
+  value: self-hosted
+  description: 'The deployment environment of the installation, to differentiate between Evolution cloud and self-hosted'
+- name: DASHBOARD_SCRIPTS
+  value:
+  display_title: 'Dashboard Scripts'
+  description: 'Scripts are loaded as the last item in the <body> tag'
+  type: code
+- name: BLOCKED_EMAIL_DOMAINS
+  value:
+  display_title: 'Blocked Email Domains'
+  description: 'Add a domain per line to block them from signing up, accepts Regex'
+  type: code
+- name: INACTIVE_WHATSAPP_NUMBERS
+  value: ''
+  display_title: 'Inactive WhatsApp Numbers'
+  description: 'Comma-separated list of WhatsApp numbers that should be rejected with a 422 error'
+  type: code
+- name: INSTALLATION_PRICING_PLAN
+  value: 'community'
+  description: 'The pricing plan for the installation, retrieved from the billing API'
+- name: INSTALLATION_PRICING_PLAN_QUANTITY
+  value: 0
+  description: 'The number of licenses purchased for the installation, retrieved from the billing API'
+- name: EVOLUTION_SUPPORT_WEBSITE_TOKEN
+  value:
+  description: 'The Evolution website token, used to identify the Evolution inbox and display the "Contact Support" option on the billing page'
+  type: secret
+- name: EVOLUTION_SUPPORT_SCRIPT_URL
+  value:
+  description: 'The Evolution script base URL, to display the "Contact Support" option on the billing page'
+- name: EVOLUTION_SUPPORT_IDENTIFIER_HASH
+  value:
+  description: 'The Evolution identifier hash, to validate the contact in the live chat window.'
+  type: secret
+# ------- End of Evolution Internal Config ----#
+
+# ------- Compliance Related Config ----#
+- name: EVOLUTION_INSTANCE_ADMIN_EMAIL
+  display_title: 'Instance Admin Email'
+  value:
+  description: 'The email of the instance administrator to receive compliance-related notifications'
+  locked: false
+# ------- End of Compliance Related Config ----#
+
+## ------ Configs added for FCM v1 notifications ------ ##
+- name: FIREBASE_PROJECT_ID
+  display_title: 'Firebase Project ID'
+  value:
+  locked: false
+  description: 'Firebase project ID'
+- name: FIREBASE_CREDENTIALS_SECRET
+  display_title: 'Firebase Credentials JSON'
+  value:
+  locked: false
+  type: secret
+  description: 'Firebase service account credentials JSON for push notifications'
+- name: IOS_APP_ID
+  display_title: 'iOS App ID'
+  value:
+  locked: false
+  description: 'iOS application bundle identifier for push notifications'
+  type: text
+- name: ANDROID_BUNDLE_ID
+  display_title: 'Android Bundle ID'
+  value:
+  locked: false
+  description: 'Android application package name for push notifications'
+  type: text
+## ------ End of Configs added for FCM v1 notifications ------ ##
+
+## ------ Configs added for Evolution ------ ##
+- name: EVOLUTION_API_URL
+  display_title: 'Evolution API URL'
+  value:
+  locked: false
+  description: 'Evolution API URL'
+- name: EVOLUTION_ADMIN_SECRET
+  display_title: 'Evolution Admin Secret'
+  value:
+  locked: false
+  description: 'Evolution admin API secret key'
+  type: secret
+## ------ End of Configs added for Evolution ------ ##
+
+## ------ Configs added for Evolution Go ------ ##
+- name: EVOLUTION_GO_API_URL
+  display_title: 'Evolution Go API URL'
+  value:
+  locked: false
+  description: 'Evolution Go API URL'
+- name: EVOLUTION_GO_ADMIN_SECRET
+  display_title: 'Evolution Go Admin Secret'
+  value:
+  locked: false
+  description: 'Evolution Go admin API secret key'
+  type: secret
+- name: EVOLUTION_GO_INSTANCE_ID
+  display_title: 'Evolution Go Instance ID'
+  value:
+  locked: false
+  description: 'Evolution Go Instance ID'
+- name: EVOLUTION_GO_INSTANCE_SECRET
+  display_title: 'Evolution Go Instance Secret'
+  value:
+  locked: false
+  description: 'Evolution Go instance API secret key'
+  type: secret
+## ------ End of Configs added for Evolution Go ------ ##
+
+## ------ Configs added for Twitter Channel ------ ##
+- name: TWITTER_APP_ID
+  display_title: 'Twitter App ID'
+  value:
+  locked: false
+  description: 'Twitter application ID'
+  type: text
+- name: TWITTER_CONSUMER_KEY
+  display_title: 'Twitter Consumer Key'
+  value:
+  locked: false
+  description: 'Twitter API consumer key'
+  type: text
+- name: TWITTER_CONSUMER_SECRET
+  display_title: 'Twitter Consumer Secret'
+  value:
+  locked: false
+  description: 'Twitter API consumer secret'
+  type: secret
+- name: TWITTER_ENVIRONMENT
+  display_title: 'Twitter Environment'
+  value:
+  locked: false
+  description: 'Twitter API environment label (e.g., production)'
+  type: text
+## ------ End of Configs added for Twitter Channel ------ ##
+
+## ------ Configs added for OpenAI ------ ##
+- name: OPENAI_API_URL
+  display_title: 'OpenAI API URL'
+  value: 'https://api.openai.com/v1'
+  locked: false
+  description: 'OpenAI API URL'
+- name: OPENAI_API_SECRET
+  display_title: 'OpenAI API Secret'
+  value:
+  locked: false
+  description: 'OpenAI API secret key'
+  type: secret
+- name: OPENAI_MODEL
+  display_title: 'OpenAI Model'
+  value: 'gpt-4.1-nano'
+  locked: false
+  description: 'OpenAI Model'
+- name: OPENAI_ENABLE_AUDIO_TRANSCRIPTION
+  display_title: 'Enable Audio Transcription'
+  value: false
+  locked: false
+  description: 'Automatically transcribe incoming audio messages using OpenAI Whisper API'
+  type: boolean
+- name: OPENAI_PROMPT_REPLY
+  display_title: 'OpenAI Reply Suggestion Prompt'
+  value: 'Please suggest a reply to the following conversation between support agents and customer. Don''t expose that you are an AI model, respond "Couldn''t generate the reply" in cases where you can''t answer. Reply in the user''s language.'
+  locked: false
+  description: 'Prompt for OpenAI reply suggestions'
+  type: text
+- name: OPENAI_PROMPT_SUMMARY
+  display_title: 'OpenAI Summary Prompt'
+  value: 'Please summarize the key points from the following conversation between support agents and customer as bullet points for the next support agent looking into the conversation. Reply in the user''s language.'
+  locked: false
+  description: 'Prompt for OpenAI conversation summaries'
+  type: text
+- name: OPENAI_PROMPT_REPHRASE
+  display_title: 'OpenAI Rephrase Prompt'
+  value: 'You are a helpful support agent. Please rephrase the following response. Ensure that the reply should be in user language.'
+  locked: false
+  description: 'Prompt for OpenAI text rephrasing'
+  type: text
+- name: OPENAI_PROMPT_FIX_GRAMMAR
+  display_title: 'OpenAI Fix Grammar Prompt'
+  value: 'You are a helpful support agent. Please fix the spelling and grammar of the following response. Ensure that the reply should be in user language.'
+  locked: false
+  description: 'Prompt for OpenAI grammar and spelling correction'
+  type: text
+- name: OPENAI_PROMPT_SHORTEN
+  display_title: 'OpenAI Shorten Prompt'
+  value: 'You are a helpful support agent. Please shorten the following response. Ensure that the reply should be in user language.'
+  locked: false
+  description: 'Prompt for OpenAI text shortening'
+  type: text
+- name: OPENAI_PROMPT_EXPAND
+  display_title: 'OpenAI Expand Prompt'
+  value: 'You are a helpful support agent. Please expand the following response. Ensure that the reply should be in user language.'
+  locked: false
+  description: 'Prompt for OpenAI text expansion'
+  type: text
+- name: OPENAI_PROMPT_FRIENDLY
+  display_title: 'OpenAI Make Friendly Prompt'
+  value: 'You are a helpful support agent. Please make the following response more friendly. Ensure that the reply should be in user language.'
+  locked: false
+  description: 'Prompt for making text more friendly'
+  type: text
+- name: OPENAI_PROMPT_FORMAL
+  display_title: 'OpenAI Make Formal Prompt'
+  value: 'You are a helpful support agent. Please make the following response more formal. Ensure that the reply should be in user language.'
+  locked: false
+  description: 'Prompt for making text more formal'
+  type: text
+- name: OPENAI_PROMPT_SIMPLIFY
+  display_title: 'OpenAI Simplify Prompt'
+  value: 'You are a helpful support agent. Please simplify the following response. Ensure that the reply should be in user language.'
+  locked: false
+  description: 'Prompt for simplifying text'
+  type: text
+## ------ End of Configs added for OpenAI ------ ##
+
+## ------ Configs added for Google OAuth ------ ##
+- name: GOOGLE_OAUTH_CLIENT_ID
+  display_title: 'Google OAuth Client ID'
+  value:
+  locked: false
+  description: 'Google OAuth Client ID'
+  type: secret
+- name: GOOGLE_OAUTH_CLIENT_SECRET
+  display_title: 'Google OAuth Client Secret'
+  value:
+  locked: false
+  description: 'Google OAuth Client Secret'
+  type: secret
+- name: GOOGLE_OAUTH_CALLBACK_URL
+  display_title: 'Google OAuth Callback URL'
+  value:
+  locked: false
+  description: 'Google OAuth Callback URL'
+## ------ End of Configs added for Google OAuth ------ ##
+
+## ------ Configs added for BMS ------ ##
+- name: BMS_API_SECRET
+  display_title: 'BMS API Secret'
+  value:
+  locked: false
+  description: 'BMS API secret key'
+  type: secret
+- name: BMS_IPPOOL
+  display_title: 'BMS IP Pool'
+  value:
+  locked: false
+  description: 'BMS IP Pool'
+## ------ End of Configs added for BMS ------ ##
+
+## ------ Configs added for Linear ------ ##
+- name: LINEAR_CLIENT_ID
+  display_title: 'Linear Client ID'
+  value:
+  locked: false
+  description: 'Linear client ID'
+- name: LINEAR_CLIENT_SECRET
+  display_title: 'Linear Client Secret'
+  value:
+  locked: false
+  description: 'Linear client secret'
+  type: secret
+## ------ End of Configs added for Linear ------ ##
+
+## ------ Configs added for HubSpot ------ ##
+- name: HUBSPOT_CLIENT_ID
+  display_title: 'HubSpot Client ID'
+  value:
+  locked: false
+  description: 'HubSpot OAuth client ID'
+- name: HUBSPOT_CLIENT_SECRET
+  display_title: 'HubSpot Client Secret'
+  value:
+  locked: false
+  description: 'HubSpot OAuth client secret'
+  type: secret
+## ------ End of Configs added for HubSpot ------ ##
+
+## ------ Configs added for Slack ------ ##
+- name: SLACK_CLIENT_ID
+  display_title: 'Slack Client ID'
+  value:
+  locked: false
+  description: 'Slack client ID'
+- name: SLACK_CLIENT_SECRET
+  display_title: 'Slack Client Secret'
+  value:
+  locked: false
+  description: 'Slack client secret'
+  type: secret
+## ------ End of Configs added for Slack ------ ##
+
+# ------- Shopify Integration Config ------- #
+- name: SHOPIFY_CLIENT_ID
+  display_title: 'Shopify Client ID'
+  description: 'The Client ID (API Key) from your Shopify Partner account'
+  locked: false
+  type: secret
+- name: SHOPIFY_CLIENT_SECRET
+  display_title: 'Shopify Client Secret'
+  description: 'The Client Secret (API Secret Key) from your Shopify Partner account'
+  locked: false
+  type: secret
+# ------- End of Shopify Related Config ------- #
+
+# ------- Instagram Channel Related Config ------- #
+- name: INSTAGRAM_APP_ID
+  display_title: 'Instagram App ID'
+  locked: false
+- name: INSTAGRAM_APP_SECRET
+  display_title: 'Instagram App Secret'
+  description: 'The App Secret used for Instagram authentication'
+  locked: false
+  type: secret
+- name: INSTAGRAM_VERIFY_TOKEN
+  display_title: 'Instagram Verify Token'
+  description: 'The verify token used for Instagram Webhook'
+  locked: false
+  type: secret
+- name: ENABLE_INSTAGRAM_CHANNEL_HUMAN_AGENT
+  display_title: 'Enable human agent for instagram channel'
+  value: false
+  locked: false
+  description: 'Enable human agent for instagram channel for longer message back period. Needs additional app approval: https://developers.facebook.com/docs/features-reference/human-agent/'
+  type: boolean
+- name: INSTAGRAM_API_VERSION
+  display_title: 'Instagram API Version'
+  description: 'Configure this if you want to use a different Instagram API version. Make sure its prefixed with `v`'
+  value: 'v23.0'
+  locked: true
+# ------- End of Instagram Channel Related Config ------- #
+
+## ------ Frontend Runtime Configuration ------ ##
+- name: RECAPTCHA_SITE_KEY
+  display_title: 'reCAPTCHA Site Key'
+  value:
+  locked: false
+  description: 'Google reCAPTCHA v3 site key for bot protection'
+  type: text
+
+- name: CLARITY_PROJECT_ID
+  display_title: 'Clarity Project ID'
+  value:
+  locked: false
+  description: 'Microsoft Clarity project ID for user behavior analytics'
+  type: text
+## ------ End Frontend Runtime Configuration ------ ##
+

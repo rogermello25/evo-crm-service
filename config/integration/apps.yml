@@ -1,0 +1,250 @@
+######  Attributes Supported by Integration Apps #######
+# id: Internal Id for the integrations, used by the hooks
+# logo: place the image in /public/dashboard/images/integrations and reference here
+# i18n_key: the key under which translations for the integration is placed in en.yml
+# action: if integration requires external redirect url
+# hook_type: ( account / inbox )
+# feature_flag: (string) feature flag to enable/disable the integration
+# allow_multiple_hooks: whether multiple hooks can be created for the integration
+# settings_json_schema: the json schema used to validate the settings hash (https://json-schema.org/)
+# settings_form_schema: the formulate schema used in frontend to render settings form (https://vueformulate.com/)
+########################################################
+webhooks:
+  id: webhook
+  logo: webhooks.png
+  i18n_key: webhooks
+  action: /webhook
+  hook_type: account
+  allow_multiple_hooks: true
+
+dashboard_apps:
+  id: dashboard_apps
+  logo: dashboard_apps.png
+  i18n_key: dashboard_apps
+  hook_type: account
+  allow_multiple_hooks: true
+
+oauth_applications:
+  id: oauth_applications
+  logo: oauth.png
+  i18n_key: oauth_applications
+  action: /oauth_applications
+  hook_type: account
+  allow_multiple_hooks: true
+
+openai:
+  id: openai
+  logo: openai.png
+  i18n_key: openai
+  action: /openai
+  hook_type: account
+  allow_multiple_hooks: false
+  settings_json_schema:
+    {
+      "type": "object",
+      "properties":
+        {
+          "api_key": { "type": "string" },
+          "label_suggestion": { "type": "boolean" },
+          "enable_audio_transcription": { "type": "boolean" }
+        },
+      "required": ["api_key"],
+      "additionalProperties": false
+    }
+  settings_form_schema:
+    [
+      {
+        "label": "API Key",
+        "type": "text",
+        "name": "api_key",
+        "validation": "required",
+      },
+      {
+        "label": "Show label suggestions",
+        "type": "checkbox",
+        "name": "label_suggestion",
+        "validation": "",
+      },
+      {
+        "label": "Enable Audio Transcription",
+        "type": "checkbox",
+        "name": "enable_audio_transcription",
+        "validation": "",
+        "help": "Automatically transcribe incoming audio messages using OpenAI Whisper API",
+      },
+    ]
+  visible_properties: ["api_key", "label_suggestion", "enable_audio_transcription"]
+
+linear:
+  id: linear
+  logo: linear.png
+  i18n_key: linear
+  action: https://linear.app/oauth/authorize
+  hook_type: account
+  allow_multiple_hooks: false
+
+hubspot:
+  id: hubspot
+  feature_flag: hubspot_integration
+  logo: hubspot.png
+  i18n_key: hubspot
+  action: https://app.hubspot.com/oauth/authorize
+  hook_type: account
+  allow_multiple_hooks: false
+
+slack:
+  id: slack
+  logo: slack.png
+  i18n_key: slack
+  action: https://slack.com/oauth/v2/authorize?scope=commands,chat:write,channels:read,channels:manage,channels:join,groups:read,groups:write,im:write,mpim:write,users:read,users:read.email,chat:write.customize,channels:history,groups:history,mpim:history,im:history,files:read,files:write
+  hook_type: account
+  allow_multiple_hooks: false
+
+shopify:
+  id: shopify
+  logo: shopify.png
+  i18n_key: shopify
+  hook_type: account
+  allow_multiple_hooks: false
+
+leadsquared:
+  id: leadsquared
+  feature_flag: crm_integration
+  logo: leadsquared.png
+  i18n_key: leadsquared
+  action: /leadsquared
+  hook_type: account
+  allow_multiple_hooks: false
+  settings_json_schema:
+    {
+      "type": "object",
+      "properties":
+        {
+          "access_key": { "type": "string" },
+          "secret_key": { "type": "string" },
+          "endpoint_url": { "type": "string" },
+          "app_url": { "type": "string" },
+          "timezone": { "type": "string" },
+          "enable_conversation_activity": { "type": "boolean" },
+          "enable_transcript_activity": { "type": "boolean" },
+          "conversation_activity_score": { "type": "string" },
+          "transcript_activity_score": { "type": "string" },
+          "conversation_activity_code": { "type": "integer" },
+          "transcript_activity_code": { "type": "integer" },
+        },
+      "required": ["access_key", "secret_key"],
+      "additionalProperties": false,
+    }
+  settings_form_schema:
+    [
+      {
+        "label": "Access Key",
+        "type": "text",
+        "name": "access_key",
+        "validation": "required",
+      },
+      {
+        "label": "Secret Key",
+        "type": "text",
+        "name": "secret_key",
+        "validation": "required",
+      },
+      {
+        "label": "Push Conversation Activity",
+        "type": "checkbox",
+        "name": "enable_conversation_activity",
+        "help": "Enable this option to push an activity when a conversation is created",
+      },
+      {
+        "label": "Conversation Activity Score",
+        "type": "number",
+        "name": "conversation_activity_score",
+        "help": "Score to assign to the conversation created activity, default is 0",
+      },
+      {
+        "label": "Push Transcript Activity",
+        "type": "checkbox",
+        "name": "enable_transcript_activity",
+        "help": "Enable this option to push an activity when a transcript is created",
+      },
+      {
+        "label": "Transcript Activity Score",
+        "type": "number",
+        "name": "transcript_activity_score",
+        "help": "Score to assign to the conversation transcript activity, default is 0",
+      },
+    ]
+  visible_properties:
+    [
+      "access_key",
+      "endpoint_url",
+      "enable_conversation_activity",
+      "enable_transcript_activity",
+      "conversation_activity_score",
+      "transcript_activity_score",
+    ]
+
+bms:
+  id: bms
+  feature_flag: bms_integration
+  logo: bms.png
+  i18n_key: bms
+  action: /bms
+  hook_type: account
+  allow_multiple_hooks: false
+  settings_json_schema:
+    {
+      "type": "object",
+      "properties":
+        {
+          "api_key": { "type": "string" },
+          "enable_contact_sync": { "type": "boolean" },
+          "enable_label_sync": { "type": "boolean" },
+          "enable_custom_attributes_sync": { "type": "boolean" },
+          "enable_campaign_sync": { "type": "boolean" },
+        },
+      "required": ["api_key"],
+      "additionalProperties": false,
+    }
+  settings_form_schema:
+    [
+      {
+        "label": "API Key",
+        "type": "text",
+        "name": "api_key",
+        "validation": "required",
+        "help": "Your BMS API key for authentication",
+      },
+      {
+        "label": "Sync Contacts",
+        "type": "checkbox",
+        "name": "enable_contact_sync",
+        "help": "Enable this option to sync contacts with BMS",
+      },
+      {
+        "label": "Sync Labels",
+        "type": "checkbox",
+        "name": "enable_label_sync",
+        "help": "Enable this option to sync labels with BMS",
+      },
+      {
+        "label": "Sync Custom Attributes",
+        "type": "checkbox",
+        "name": "enable_custom_attributes_sync",
+        "help": "Enable this option to sync custom attributes with BMS",
+      },
+      {
+        "label": "Sync Campaigns",
+        "type": "checkbox",
+        "name": "enable_campaign_sync",
+        "help": "Enable this option to sync campaigns with BMS",
+      },
+    ]
+  visible_properties:
+    [
+      "api_key",
+      "enable_contact_sync",
+      "enable_label_sync",
+      "enable_custom_attributes_sync",
+      "enable_campaign_sync",
+    ]

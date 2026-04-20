@@ -1,0 +1,76 @@
+# https://github.com/ondrejbartas/sidekiq-cron
+# use https://crontab.guru/ to validate
+# validations for this file exist in /spec/configs/schedule_spec.rb
+
+# # executed At every 5th minute..
+trigger_scheduled_items_job:
+  cron: '*/5 * * * *'
+  class: 'TriggerScheduledItemsJob'
+  queue: scheduled_jobs
+
+# executed every minute to process scheduled actions
+scheduled_actions_processor_job:
+  cron: '* * * * *'
+  class: 'ScheduledActionsProcessorJob'
+  queue: scheduled_jobs
+# executed At every 5th minute to check for overdue pipeline tasks
+check_overdue_tasks_job:
+  cron: '*/5 * * * *'
+  class: 'Pipelines::CheckOverdueTasksJob'
+  queue: scheduled_jobs
+  description: 'Check and notify overdue pipeline tasks'
+
+# executed At every 15th minute to send reminders for tasks due soon
+task_due_soon_reminder_job:
+  cron: '*/15 * * * *'
+  class: 'Pipelines::TaskDueSoonReminderJob'
+  queue: scheduled_jobs
+  description: 'Send reminders for tasks due soon (within 1 hour)'
+
+# executed At every 2 minutes for better performance with high volume inboxes
+trigger_imap_email_inboxes_job:
+  cron: '*/2 * * * *'
+  class: 'Inboxes::FetchImapEmailInboxesJob'
+  queue: scheduled_jobs
+
+# executed At every minute to check for inactive conversations and trigger actions
+agent_bots_inactivity_check_scheduler_job:
+  cron: '* * * * *'
+  class: 'AgentBots::InactivityCheckSchedulerJob'
+  queue: scheduled_jobs
+  description: 'Check inactive conversations and process inactivity actions'
+
+# executed daily at 2230 UTC
+# which is our lowest traffic time
+remove_stale_contact_inboxes_job.rb:
+  cron: '30 22 * * *'
+  class: 'Internal::RemoveStaleContactInboxesJob'
+  queue: scheduled_jobs
+
+# executed daily at 2230 UTC
+# which is our lowest traffic time
+remove_stale_redis_keys_job.rb:
+  cron: '30 22 * * *'
+  class: 'Internal::RemoveStaleRedisKeysJob'
+  queue: scheduled_jobs
+
+#executed daily at 0430 UTC
+# which will be IST 10:00 AM
+process_stale_contacts_job:
+  cron: '30 04 * * *'
+  class: 'Internal::ProcessStaleContactsJob'
+  queue: housekeeping
+
+# executed daily at 0100 UTC
+# to delete accounts marked for deletion
+delete_accounts_job:
+  cron: '0 1 * * *'
+  class: 'Internal::DeleteAccountsJob'
+  queue: scheduled_jobs
+
+# executed daily at 0300 UTC
+# to renew Gmail watch subscriptions (required every 7 days, running daily for safety)
+gmail_renew_watch_job:
+  cron: '0 3 * * *'
+  class: 'Gmail::RenewWatchJob'
+  queue: low

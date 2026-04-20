@@ -1,0 +1,24 @@
+Hi <%= @assignee.name %>,
+
+REMINDER: The following task is due soon (within 1 hour):
+
+<%= @task.title %>
+<% if @task.description.present? %>
+Description: <%= @task.description %>
+<% end %>
+
+Task Type: <%= @task.task_type.titleize %>
+Priority: <%= @task.priority.titleize %>
+Due Date: <%= @task.due_date.strftime('%B %d, %Y at %I:%M %p') %>
+Time Remaining: <%= @task.hours_until_due.abs.round %> hour(s)
+
+<% if @conversation.present? %>
+Related to conversation: <%= @conversation.display_id %>
+<% elsif @contact.present? %>
+Related to contact: <%= @contact.name %>
+<% end %>
+
+Please complete this task as soon as possible.
+
+Best regards,
+<%= @account_name %> Team

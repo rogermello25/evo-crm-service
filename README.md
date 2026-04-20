@@ -297,3 +297,4 @@ Evolution CRM is built on top of modern Ruby on Rails best practices and inspire
 **Evolution CRM** - Modern customer support platform backend
 
 Made with ❤️ by [Evolution AI](https://evoai.app)
+# trigger

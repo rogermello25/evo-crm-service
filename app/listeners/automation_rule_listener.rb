@@ -169,7 +169,7 @@ class AutomationRuleListener < BaseListener
     
     # 1. Se changed_attributes está vazio, pode ser um evento de automação não detectado
     if changed_attributes.blank? || changed_attributes.empty?
-      Rails.logger.info "Automation Rule: Skipping contact_updated for contact #{contact.id} - empty changed_attributes"
+      CrmLogger.automation.info "Skipping contact_updated for contact #{contact.id} - empty changed_attributes"
       return
     end
     
@@ -180,7 +180,7 @@ class AutomationRuleListener < BaseListener
     recent_count = Rails.cache.read(recent_events_key) || 0
     
     if recent_count > 5
-      Rails.logger.warn "Automation Rule: Skipping contact_updated for contact #{contact.id} - too many recent events (#{recent_count})"
+      CrmLogger.automation.warn "Skipping contact_updated for contact #{contact.id} - too many recent events (#{recent_count})"
       return
     end
     
@@ -188,7 +188,7 @@ class AutomationRuleListener < BaseListener
     Rails.cache.write(recent_events_key, recent_count + 1, expires_in: 30.seconds)
 
     # Log para debug das mudanças
-    Rails.logger.debug "Automation Rule: Processing contact_updated for contact #{contact.id} - changed attributes: #{changed_attributes.keys.sort}"
+    CrmLogger.automation.debug "Processing contact_updated for contact #{contact.id} - changed attributes: #{changed_attributes.keys.sort}"
 
     return unless rule_present?('contact_updated', account)
 

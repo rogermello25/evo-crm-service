@@ -1,17 +1,17 @@
 class RoomChannel < ApplicationCable::Channel
   def subscribed
-    Rails.logger.info "RoomChannel subscription requested user_id=#{params[:user_id]}"
+    CrmLogger.websocket.info "subscription requested user_id=#{params[:user_id]}"
     @current_user = resolve_current_user
     ensure_stream
     update_subscription
     broadcast_presence
-    Rails.logger.info "RoomChannel subscription successful user_id=#{@current_user.id}"
+    CrmLogger.websocket.info "subscription successful user_id=#{@current_user.id}"
   rescue ActiveRecord::RecordNotFound => e
-    Rails.logger.warn "RoomChannel subscription rejected: #{e.class} #{e.message}"
+    CrmLogger.websocket.warn "subscription rejected: #{e.class} #{e.message}"
     reject
   rescue StandardError => e
-    Rails.logger.error "RoomChannel subscription failed: #{e.class} #{e.message}"
-    Rails.logger.error e.backtrace.join("\n")
+    CrmLogger.websocket.error "subscription failed: #{e.class} #{e.message}"
+    CrmLogger.websocket.error e.backtrace.join("\n")
     reject
   end
 
@@ -55,7 +55,7 @@ class RoomChannel < ApplicationCable::Channel
 
     verified_connection_user = connection.warden_user
     if verified_connection_user.is_a?(User) && verified_connection_user.id.to_s == params[:user_id].to_s
-      Rails.logger.warn "RoomChannel token mismatch for user_id=#{verified_connection_user.id}; using current token"
+      CrmLogger.websocket.warn "token mismatch for user_id=#{verified_connection_user.id}; using current token"
       @stream_pubsub_token = verified_connection_user.pubsub_token
       return verified_connection_user
     end

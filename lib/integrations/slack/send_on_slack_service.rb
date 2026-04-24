@@ -20,7 +20,7 @@ class Integrations::Slack::SendOnSlackService < Base::SendOnChannelService
     # You may wonder why we're not requesting reauthorization and disabling hooks when scope errors occur.
     # Since link unfurling is just a nice-to-have feature that doesn't affect core functionality, we will silently ignore these errors.
   rescue Slack::Web::Api::Errors::MissingScope => e
-    Rails.logger.warn "Slack: Missing scope error: #{e.message}"
+    CrmLogger.slack.warn "Missing scope error: #{e.message}"
   end
 
   private
@@ -103,7 +103,7 @@ class Integrations::Slack::SendOnSlackService < Base::SendOnChannelService
     upload_file if message.attachments.any?
   rescue Slack::Web::Api::Errors::AccountInactive, Slack::Web::Api::Errors::MissingScope, Slack::Web::Api::Errors::InvalidAuth,
          Slack::Web::Api::Errors::ChannelNotFound, Slack::Web::Api::Errors::NotInChannel => e
-    Rails.logger.error e
+    CrmLogger.slack.error "#{e.class}: #{e.message}"
     hook.prompt_reauthorization!
     hook.disable
   end
@@ -129,7 +129,7 @@ class Integrations::Slack::SendOnSlackService < Base::SendOnChannelService
       thread_ts: conversation.identifier,
       channel_id: hook.reference_id
     )
-    Rails.logger.info "slack_upload_result: #{result}"
+    CrmLogger.slack.info "upload result: #{result}"
   end
 
   def file_type
